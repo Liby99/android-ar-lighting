@@ -50,7 +50,25 @@ public class QuadRenderer {
   private int quadTexCoordParam;
   private int textureId = -1;
 
-  public QuadRenderer() {}
+  private float[] quadCoords;
+
+  private static final float[] QUAD_COORDS =
+          new float[] {
+                  -1.0f, -1.0f, 0.0f, -1.0f, +1.0f, 0.0f, +1.0f, -1.0f, 0.0f, +1.0f, +1.0f, 0.0f,
+          };
+
+  private static final float[] QUAD_TEXCOORDS =
+          new float[] {
+                  0.0f, 1.0f,
+                  0.0f, 0.0f,
+                  1.0f, 1.0f,
+                  1.0f, 0.0f,
+          };
+
+  public QuadRenderer(float[] quadCoords) {
+    assert quadCoords.length == 12;
+    this.quadCoords = quadCoords;
+  }
 
   public int getTextureId() {
     return textureId;
@@ -76,14 +94,14 @@ public class QuadRenderer {
     GLES20.glTexParameteri(textureTarget, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_NEAREST);
 
     int numVertices = 4;
-    if (numVertices != QUAD_COORDS.length / COORDS_PER_VERTEX) {
+    if (numVertices != quadCoords.length / COORDS_PER_VERTEX) {
       throw new RuntimeException("Unexpected number of vertices in QuadRenderer.");
     }
 
-    ByteBuffer bbVertices = ByteBuffer.allocateDirect(QUAD_COORDS.length * FLOAT_SIZE);
+    ByteBuffer bbVertices = ByteBuffer.allocateDirect(quadCoords.length * FLOAT_SIZE);
     bbVertices.order(ByteOrder.nativeOrder());
     quadVertices = bbVertices.asFloatBuffer();
-    quadVertices.put(QUAD_COORDS);
+    quadVertices.put(quadCoords);
     quadVertices.position(0);
 
     ByteBuffer bbTexCoords =
@@ -171,17 +189,4 @@ public class QuadRenderer {
 
     ShaderUtil.checkGLError(TAG, "Draw");
   }
-
-  private static final float[] QUAD_COORDS =
-      new float[] {
-        -1.0f, -1.0f, 0.0f, -1.0f, +1.0f, 0.0f, +1.0f, -1.0f, 0.0f, +1.0f, +1.0f, 0.0f,
-      };
-
-  private static final float[] QUAD_TEXCOORDS =
-      new float[] {
-        0.0f, 1.0f,
-        0.0f, 0.0f,
-        1.0f, 1.0f,
-        1.0f, 0.0f,
-      };
 }

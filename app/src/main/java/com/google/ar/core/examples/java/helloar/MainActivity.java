@@ -40,6 +40,7 @@ import com.google.ar.core.examples.java.common.helpers.DisplayRotationHelper;
 import com.google.ar.core.examples.java.common.helpers.FullScreenHelper;
 import com.google.ar.core.examples.java.common.helpers.SnackbarHelper;
 import com.google.ar.core.examples.java.common.helpers.TapHelper;
+import com.google.ar.core.examples.java.common.rendering.BackgroundRenderer;
 import com.google.ar.core.examples.java.common.rendering.QuadRenderer;
 import com.google.ar.core.examples.java.common.rendering.ObjectRenderer;
 import com.google.ar.core.examples.java.common.rendering.ObjectRenderer.BlendMode;
@@ -74,7 +75,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
   private DisplayRotationHelper displayRotationHelper;
   private TapHelper tapHelper;
 
-  private final QuadRenderer quadRenderer = new QuadRenderer();
+  private final BackgroundRenderer backgroundRenderer = new BackgroundRenderer();
   private final ObjectRenderer virtualObject = new ObjectRenderer();
   private final ObjectRenderer virtualObjectShadow = new ObjectRenderer();
   private final PlaneRenderer planeRenderer = new PlaneRenderer();
@@ -215,7 +216,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
     // Prepare the rendering objects. This involves reading shaders, so may throw an IOException.
     try {
       // Create the texture and pass it to ARCore session to be filled during update().
-      quadRenderer.createOnGlThread(/*context=*/ this);
+      backgroundRenderer.createOnGlThread(/*context=*/ this);
       planeRenderer.createOnGlThread(/*context=*/ this, "models/trigrid.png");
       pointCloudRenderer.createOnGlThread(/*context=*/ this);
 
@@ -251,7 +252,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
     displayRotationHelper.updateSessionIfNeeded(session);
 
     try {
-      session.setCameraTextureName(quadRenderer.getTextureId());
+      session.setCameraTextureName(backgroundRenderer.getTextureId());
 
       // Obtain the current frame from ARSession. When the configuration is set to
       // UpdateMode.BLOCKING (it is by default), this will throttle the rendering to the
@@ -289,7 +290,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
       }
 
       // Draw background.
-      quadRenderer.draw(frame);
+      backgroundRenderer.draw(frame);
 
       // If not tracking, don't draw 3d objects.
       if (camera.getTrackingState() == TrackingState.PAUSED) {
