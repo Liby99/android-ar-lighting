@@ -29,8 +29,8 @@ import java.nio.FloatBuffer;
  * This class renders the AR background from camera feed. It creates and hosts the texture given to
  * ARCore to be filled with the camera image.
  */
-public class BackgroundRenderer {
-  private static final String TAG = BackgroundRenderer.class.getSimpleName();
+public class QuadRenderer {
+  private static final String TAG = QuadRenderer.class.getSimpleName();
 
   // Shader names.
   private static final String VERTEX_SHADER_NAME = "shaders/screenquad.vert";
@@ -50,7 +50,7 @@ public class BackgroundRenderer {
   private int quadTexCoordParam;
   private int textureId = -1;
 
-  public BackgroundRenderer() {}
+  public QuadRenderer() {}
 
   public int getTextureId() {
     return textureId;
@@ -77,7 +77,7 @@ public class BackgroundRenderer {
 
     int numVertices = 4;
     if (numVertices != QUAD_COORDS.length / COORDS_PER_VERTEX) {
-      throw new RuntimeException("Unexpected number of vertices in BackgroundRenderer.");
+      throw new RuntimeException("Unexpected number of vertices in QuadRenderer.");
     }
 
     ByteBuffer bbVertices = ByteBuffer.allocateDirect(QUAD_COORDS.length * FLOAT_SIZE);
