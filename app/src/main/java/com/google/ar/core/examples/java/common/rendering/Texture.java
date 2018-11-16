@@ -40,16 +40,17 @@ public class Texture {
     this.textureId = textures[0];
 
     // Setup the texture
-    int textureTarget = GLES11Ext.GL_TEXTURE_EXTERNAL_OES;
-    GLES20.glBindTexture(textureTarget, this.textureId);
-    GLES20.glTexParameteri(textureTarget, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE);
-    GLES20.glTexParameteri(textureTarget, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE);
-    GLES20.glTexParameteri(textureTarget, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST);
-    GLES20.glTexParameteri(textureTarget, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_NEAREST);
+    GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, this.textureId);
+    GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE);
+    GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE);
+    GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST);
+    GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_NEAREST);
+    GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0);
   }
 
   public void load(Bitmap texture) {
     GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, this.getTextureId());
     GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, texture, 0);
+    GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0);
   }
 }

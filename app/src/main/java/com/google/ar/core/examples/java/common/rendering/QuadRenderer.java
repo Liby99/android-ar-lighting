@@ -22,8 +22,8 @@ public class QuadRenderer {
   private static final String TAG = BackgroundRenderer.class.getSimpleName();
 
   // Shader names.
-  private static final String VERTEX_SHADER_NAME = "shaders/screenquad.vert";
-  private static final String FRAGMENT_SHADER_NAME = "shaders/screenquad.frag";
+  private static final String VERTEX_SHADER_NAME = "shaders/quad.vert";
+  private static final String FRAGMENT_SHADER_NAME = "shaders/quad.frag";
 
   private static final int COORDS_PER_VERTEX = 3;
   private static final int TEXCOORDS_PER_VERTEX = 2;
@@ -37,6 +37,7 @@ public class QuadRenderer {
 
   private int quadPositionParam;
   private int quadTexCoordParam;
+  private int quadTextureParam;
   private float[] quadCoords;
 
   private static final float[] QUAD_COORDS =
@@ -113,6 +114,7 @@ public class QuadRenderer {
 
     quadPositionParam = GLES20.glGetAttribLocation(quadProgram, "a_Position");
     quadTexCoordParam = GLES20.glGetAttribLocation(quadProgram, "a_TexCoord");
+    quadTextureParam = GLES20.glGetAttribLocation(quadProgram, "sTexture");
 
     ShaderUtil.checkGLError(TAG, "Program parameters");
   }
@@ -125,7 +127,9 @@ public class QuadRenderer {
     GLES20.glDepthMask(false);
 
     Log.d("Render","TextureId: " + this.getTextureId());
-    GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, this.getTextureId());
+    GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
+    GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, this.getTextureId());
+    GLES20.glUniform1i(quadTextureParam, 0);
 
     GLES20.glUseProgram(quadProgram);
 

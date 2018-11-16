@@ -15,7 +15,7 @@ import glm.vec3.Vec3;
 import glm.vec4.Vec4;
 
 public class AREnvironment {
-  private static final int SIZE = 128;
+  private static final int SIZE = 16;
   private static final int HALF_SIZE = SIZE / 2;
   private static final int NUM_FACES = 6;
 
@@ -61,19 +61,40 @@ public class AREnvironment {
     view.v30(0);
     view.v31(0);
     view.v32(0);
+
+//    Log.d("Liby", new Mat4(new float[] {1, 2, 3}).toString());
+
     Mat4 invProjView = (new Mat4(projMat)).times(view).inverse();
 
+//    Log.d("Liby", "Starting to update bitmaps, width = " + width + ", height = " + height);
+
+    final int total = yPlane.capacity();
+    final int uvCapacity = uPlane.capacity();
+
     // Set values
-    for (int i = 0; i < width; i++) {
-      for (int j = 0; j < height; j++) {
+    int yPos = 0;
+    for (int i = 0; i < height; i += 4) {
+
+      int uvPos = (i >> 1) * width;
+      for (int j = 0; j < width; j += 4) {
+        if (uvPos >= uvCapacity - 1) {
+          break;
+        } else if (yPos >= total) {
+          break;
+        }
 
         // Get the rgba values
-        int pxId = j * height + i;
-        int argb = yuvToARGB(yPlane.get(pxId), uPlane.get(pxId), vPlane.get(pxId));
+        int y = yPlane.get(yPos++) & 0xff;
+        int u = (uPlane.get(uvPos) & 0xff) - 128;
+        int v = (vPlane.get(uvPos + 1) & 0xff) - 128;
+        if ((j & 1) == 1) {
+          uvPos += 2;
+        }
+        int argb = yuvToARGB(y, u, v);
 
         // X and Y value in
-        float imgx = (float) (i - halfWidth) / width;
-        float imgy = (float) (j - halfHeight) / height;
+        float imgx = (float) (i - halfHeight) / halfHeight;
+        float imgy = (float) (j - halfWidth) / halfWidth;
 
         // First we get the bitmap to draw
         Vec3 pxDir = new Vec3(invProjView.times(new Vec4(imgx, imgy, 1, 1))).normalize();
@@ -84,18 +105,34 @@ public class AREnvironment {
         int bitmapX = (int) (faceXY.x * HALF_SIZE + HALF_SIZE);
         int bitmapY = (int) (faceXY.y * HALF_SIZE + HALF_SIZE);
 
-        Log.d("Liby", "Face " + bitmapIndex + ", x = " + bitmapX + ", y = " + bitmapY);
+        Log.d("Liby", "Face " + bitmapIndex + ", x = " + bitmapX + ", y = " + bitmapY + ", color = " + argb);
 
         // Update the bitmap
         textureBitmaps[bitmapIndex].setPixel(bitmapX, bitmapY, argb);
       }
+
+//      Log.d("Liby", "Finishing i = " + i);
     }
+
+//    textureBitmaps[0].setPixel(0, 0, 0xffff00ff);
+//    textureBitmaps[0].setPixel(1, 0, 0xffff0000);
+//    textureBitmaps[0].setPixel(1, 1, 0xffffff00);
+//    textureBitmaps[0].setPixel(0, 1, 0xff00ff00);
+
+//    Log.d("Liby", "Ending AREnv Update");
   }
 
   public void drawToTexture() {
+//    Log.d("Liby", "Pixel value of face 0 at 0, 0: " + textureBitmaps[0].getPixel(0, 0));
+//    Log.d("Liby", "Pixel value of face 0 at 0, 1: " + textureBitmaps[0].getPixel(0, 1));
+//    Log.d("Liby", "Pixel value of face 0 at 1, 0: " + textureBitmaps[0].getPixel(1, 0));
+//    Log.d("Liby", "Pixel value of face 0 at 1, 1: " + textureBitmaps[0].getPixel(1, 1));
     for (int i = 0; i < NUM_FACES; i++) {
-      GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textures[i].getTextureId());
-      GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, textureBitmaps[i], 0);
+
+
+
+//      Log.d("Liby", "Generated texture_id: " + textures[i].getTextureId());
+      textures[i].load(textureBitmaps[i]);
     }
   }
 
@@ -139,11 +176,16 @@ public class AREnvironment {
     }
   }
 
-  public int yuvToARGB(byte y, byte u, byte v) {
-    float fu = (float) u, fv = (float) v;
-    int r = (int) (y + 1.14f * fv);
-    int g = (int) (y - 0.395f * fu - 0.581f * fv);
-    int b = (int) (y + 2.033f * fu);
-    return 0xff000000 | r << 16 | g << 8 | b;
+  public int yuvToARGB(int y1, int u, int v) {
+    final int y1192 = 1192 * y1;
+    int r = (y1192 + 1634 * v);
+    int g = (y1192 - 833 * v - 400 * u);
+    int b = (y1192 + 2066 * u);
+
+    r = (r < 0) ? 0 : ((r > 262143) ? 262143 : r);
+    g = (g < 0) ? 0 : ((g > 262143) ? 262143 : g);
+    b = (b < 0) ? 0 : ((b > 262143) ? 262143 : b);
+
+    return 0xff000000 | ((r << 6) & 0xff0000) | ((g >> 2) & 0xff00) | ((b >> 10) & 0xff);
   }
 }

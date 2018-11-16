@@ -128,6 +128,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
     for (int i = 0; i < 6; i++) {
       quadRenderers[i] = new QuadRenderer(ENV_QUAD_COORDS[i], env.getTexture(i));
     }
+
   }
 
   @Override
@@ -252,6 +253,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
 
       for (int i = 0; i < 6; i++) {
         quadRenderers[i].createOnGlThread(this);
+        Log.d("Liby", "Generating quadRenderer " + i + " with texture_id " + quadRenderers[i].getTextureId());
       }
     } catch (IOException e) {
       Log.e(TAG, "Failed to read an asset file", e);
@@ -379,6 +381,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
 
       // TODO: HERE!!!!!
       if (!drawn) {
+        drawn = true;
 
         // Acquire image then release
         Image image = frame.acquireCameraImage();
@@ -387,9 +390,10 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
 
         // Then draw to texture
         env.drawToTexture();
-        for (int i = 0; i < 6; i++) {
-          quadRenderers[i].draw();
-        }
+      }
+
+      for (int i = 0; i < 6; i++) {
+        quadRenderers[i].draw();
       }
 
     } catch (Throwable t) {
