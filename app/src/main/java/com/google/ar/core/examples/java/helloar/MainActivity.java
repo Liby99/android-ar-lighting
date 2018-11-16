@@ -16,6 +16,8 @@
 
 package com.google.ar.core.examples.java.helloar;
 
+import android.graphics.Bitmap;
+import android.media.Image;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
@@ -53,6 +55,7 @@ import com.google.ar.core.exceptions.UnavailableDeviceNotCompatibleException;
 import com.google.ar.core.exceptions.UnavailableSdkTooOldException;
 import com.google.ar.core.exceptions.UnavailableUserDeclinedInstallationException;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -259,6 +262,15 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
       // camera framerate.
       Frame frame = session.update();
       Camera camera = frame.getCamera();
+
+      Bitmap bm = Bitmap.createBitmap(128, 128, Bitmap.Config.ARGB_8888);
+      Image img = frame.acquireCameraImage();
+      android.media.Image.Plane[] planes = img.getPlanes();
+      for (int i = 0; i < planes.length; i++) {
+        android.media.Image.Plane plane = planes[i];
+        ByteBuffer bb = plane.getBuffer();
+        bb.asCharBuffer();
+      }
 
       // Handle taps. Handling only one tap per frame, as taps are usually low frequency
       // compared to frame rate.
