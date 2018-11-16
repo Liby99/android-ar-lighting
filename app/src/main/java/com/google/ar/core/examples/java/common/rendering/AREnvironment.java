@@ -18,7 +18,7 @@ public class AREnvironment {
   private static final int SIZE = 32;
   private static final int HALF_SIZE = SIZE / 2;
   private static final int NUM_FACES = 6;
-  private static final int SKIP = 8;
+  private static final int SKIP = 20;
 
   // Right: 0
   // Left: 1
@@ -57,27 +57,23 @@ public class AREnvironment {
     ByteBuffer uPlane = planes[1].getBuffer();
     ByteBuffer vPlane = planes[2].getBuffer();
 
+    cameraImage.close();
+
     // Initiate matrices
     Mat4 view = new Mat4(viewMat);
     view.v30(0);
     view.v31(0);
     view.v32(0);
 
-//    Log.d("Liby", new Mat4(new float[] {1, 2, 3}).toString());
-
     Mat4 invProjView = (new Mat4(projMat)).times(view).inverse();
-
-//    Log.d("Liby", "Starting to update bitmaps, width = " + width + ", height = " + height);
 
     final int total = yPlane.capacity();
     final int uvCapacity = uPlane.capacity();
 
     // Set values
-    int yPos = 0;
-    for (int i = 0; i < height; i += 1) {
-
-      int uvPos = (i >> 1) * width;
-      for (int j = 0; j < width; j += 1) {
+    int yPos = 0, uvPos = 0;
+    for (int i = 0; i < height; i += SKIP) {
+      for (int j = 0; j < width; j += SKIP) {
         if (uvPos >= uvCapacity - 1) {
           break;
         } else if (yPos >= total) {
@@ -85,12 +81,11 @@ public class AREnvironment {
         }
 
         // Get the rgba values
-        int y = yPlane.get(yPos++) & 0xff;
+        yPos = i * width + j;
+        uvPos = ((i >> 1) * width) + (j / 2 * 2);
+        int y = yPlane.get(yPos) & 0xff;
         int u = (uPlane.get(uvPos) & 0xff) - 128;
         int v = (vPlane.get(uvPos + 1) & 0xff) - 128;
-        if ((j & 1) == 1) {
-          uvPos += 2;
-        }
         int argb = yuvToARGB(y, u, v);
 
         // X and Y value in
@@ -111,17 +106,11 @@ public class AREnvironment {
         // Update the bitmap
         textureBitmaps[bitmapIndex].setPixel(bitmapX, bitmapY, argb);
       }
-
-//      Log.d("Liby", "Finishing i = " + i);
     }
-
-//    Log.d("Liby", "Ending AREnv Update");
   }
 
   public void drawToTexture() {
     for (int i = 0; i < NUM_FACES; i++) {
-
-//      Log.d("Liby", "Generated texture_id: " + textures[i].getTextureId());
       textures[i].load(textureBitmaps[i]);
     }
   }
@@ -157,12 +146,12 @@ public class AREnvironment {
         return new Vec2(z, y);
       case 2: case 3:
         scale = Math.abs(1.0f / dir.y);
-        x = dir.x * scale;
-        z = dir.z * scale;
+        x = -dir.x * scale;
+        z = -sign(dir.y) * dir.z * scale;
         return new Vec2(x, z);
       case 4: case 5:
         scale = Math.abs(1.0f / dir.z);
-        x = dir.x * scale;
+        x = -dir.x * scale;
         y = sign(dir.z) * dir.y * scale;
         return new Vec2(x, y);
       default:

@@ -101,7 +101,8 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
     new float[] { -0.7f, -0.6f, 0.0f, -0.7f, -0.4f, 0.0f, -0.4f, -0.6f, 0.0f, -0.4f, -0.4f, 0.0f },
   };
 
-  private boolean drawn = false;
+  private int drawCount = 0;
+  private static final int GAP = 30;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -380,17 +381,18 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
       }
 
       // TODO: HERE!!!!!
-      if (!drawn) {
-        drawn = true;
+      if (drawCount > GAP) {
+        drawCount = 0;
 
         // Acquire image then release
         Image image = frame.acquireCameraImage();
         env.update(image, projmtx, viewmtx);
-        image.close();
+//        image.close();
 
         env.drawToTexture();
       }
 
+      drawCount++;
       for (int i = 0; i < 6; i++) {
         quadRenderers[i].draw();
       }
