@@ -36,6 +36,7 @@ public class Texture {
 
     // Generate the texture id
     int[] textures = new int[1];
+    GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
     GLES20.glGenTextures(1, textures, 0);
     this.textureId = textures[0];
 
@@ -48,9 +49,15 @@ public class Texture {
     GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0);
   }
 
-  public void load(Bitmap texture) {
-    GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, this.getTextureId());
-    GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, texture, 0);
+  public void load(Bitmap bitmap) {
+//    byte[] pixels = new byte[this.width * this.height * 4];
+//    texture.getPixels(pixels, 0, 0, 0, 0, this.width, this.height);
+    GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
+    GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, this.textureId);
+    GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, bitmap, 0);
+//    GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D, 0, GLES20.GL_RGBA, this.width, this.height, 0, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, pixels);
     GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0);
+
+    bitmap.recycle();
   }
 }

@@ -31,13 +31,11 @@ public class QuadRenderer {
 
   private FloatBuffer quadVertices;
   private FloatBuffer quadTexCoord;
-  private FloatBuffer quadTexCoordTransformed;
 
   private int quadProgram;
 
   private int quadPositionParam;
   private int quadTexCoordParam;
-  private int quadTextureParam;
   private float[] quadCoords;
 
   private static final float[] QUAD_COORDS =
@@ -47,7 +45,10 @@ public class QuadRenderer {
 
   private static final float[] QUAD_TEXCOORDS =
           new float[] {
-                  0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f,
+                  0.0f, 1.0f,
+                  0.0f, 0.0f,
+                  1.0f, 1.0f,
+                  1.0f, 0.0f,
           };
 
   public QuadRenderer(float[] quadCoords, Texture texture) {
@@ -94,11 +95,6 @@ public class QuadRenderer {
     quadTexCoord.put(QUAD_TEXCOORDS);
     quadTexCoord.position(0);
 
-    ByteBuffer bbTexCoordsTransformed =
-            ByteBuffer.allocateDirect(numVertices * TEXCOORDS_PER_VERTEX * FLOAT_SIZE);
-    bbTexCoordsTransformed.order(ByteOrder.nativeOrder());
-    quadTexCoordTransformed = bbTexCoordsTransformed.asFloatBuffer();
-
     int vertexShader =
             ShaderUtil.loadGLShader(TAG, context, GLES20.GL_VERTEX_SHADER, VERTEX_SHADER_NAME);
     int fragmentShader =
@@ -114,7 +110,6 @@ public class QuadRenderer {
 
     quadPositionParam = GLES20.glGetAttribLocation(quadProgram, "a_Position");
     quadTexCoordParam = GLES20.glGetAttribLocation(quadProgram, "a_TexCoord");
-    quadTextureParam = GLES20.glGetAttribLocation(quadProgram, "sTexture");
 
     ShaderUtil.checkGLError(TAG, "Program parameters");
   }
@@ -126,10 +121,7 @@ public class QuadRenderer {
     GLES20.glDisable(GLES20.GL_DEPTH_TEST);
     GLES20.glDepthMask(false);
 
-    Log.d("Render","TextureId: " + this.getTextureId());
-    GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
     GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, this.getTextureId());
-    GLES20.glUniform1i(quadTextureParam, 0);
 
     GLES20.glUseProgram(quadProgram);
 
@@ -144,7 +136,7 @@ public class QuadRenderer {
             GLES20.GL_FLOAT,
             false,
             0,
-            quadTexCoordTransformed);
+            quadTexCoord);
 
     // Enable vertex arrays
     GLES20.glEnableVertexAttribArray(quadPositionParam);

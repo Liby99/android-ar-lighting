@@ -15,9 +15,10 @@ import glm.vec3.Vec3;
 import glm.vec4.Vec4;
 
 public class AREnvironment {
-  private static final int SIZE = 16;
+  private static final int SIZE = 32;
   private static final int HALF_SIZE = SIZE / 2;
   private static final int NUM_FACES = 6;
+  private static final int SKIP = 8;
 
   // Right: 0
   // Left: 1
@@ -73,10 +74,10 @@ public class AREnvironment {
 
     // Set values
     int yPos = 0;
-    for (int i = 0; i < height; i += 4) {
+    for (int i = 0; i < height; i += 1) {
 
       int uvPos = (i >> 1) * width;
-      for (int j = 0; j < width; j += 4) {
+      for (int j = 0; j < width; j += 1) {
         if (uvPos >= uvCapacity - 1) {
           break;
         } else if (yPos >= total) {
@@ -114,22 +115,11 @@ public class AREnvironment {
 //      Log.d("Liby", "Finishing i = " + i);
     }
 
-//    textureBitmaps[0].setPixel(0, 0, 0xffff00ff);
-//    textureBitmaps[0].setPixel(1, 0, 0xffff0000);
-//    textureBitmaps[0].setPixel(1, 1, 0xffffff00);
-//    textureBitmaps[0].setPixel(0, 1, 0xff00ff00);
-
 //    Log.d("Liby", "Ending AREnv Update");
   }
 
   public void drawToTexture() {
-//    Log.d("Liby", "Pixel value of face 0 at 0, 0: " + textureBitmaps[0].getPixel(0, 0));
-//    Log.d("Liby", "Pixel value of face 0 at 0, 1: " + textureBitmaps[0].getPixel(0, 1));
-//    Log.d("Liby", "Pixel value of face 0 at 1, 0: " + textureBitmaps[0].getPixel(1, 0));
-//    Log.d("Liby", "Pixel value of face 0 at 1, 1: " + textureBitmaps[0].getPixel(1, 1));
     for (int i = 0; i < NUM_FACES; i++) {
-
-
 
 //      Log.d("Liby", "Generated texture_id: " + textures[i].getTextureId());
       textures[i].load(textureBitmaps[i]);
@@ -153,6 +143,10 @@ public class AREnvironment {
     }
   }
 
+  public int sign(float n) {
+    return n > 0 ? 1 : -1;
+  }
+
   public Vec2 getXYOnFace(Vec3 dir, int face) {
     float scale, x, y, z;
     switch (face) {
@@ -169,7 +163,7 @@ public class AREnvironment {
       case 4: case 5:
         scale = Math.abs(1.0f / dir.z);
         x = dir.x * scale;
-        y = dir.y * scale;
+        y = sign(dir.z) * dir.y * scale;
         return new Vec2(x, y);
       default:
         throw new Error("Invalid face " + face);

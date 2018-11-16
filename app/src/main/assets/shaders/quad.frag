@@ -12,7 +12,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 precision mediump float;
 varying vec2 v_TexCoord;
 uniform sampler2D sTexture;

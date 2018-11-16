@@ -388,7 +388,6 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
         env.update(image, projmtx, viewmtx);
         image.close();
 
-        // Then draw to texture
         env.drawToTexture();
       }
 
