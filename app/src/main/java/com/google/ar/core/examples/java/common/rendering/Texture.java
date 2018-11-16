@@ -10,9 +10,14 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 
 public class Texture {
+  private static final int SIZE = 128;
 
   private int width, height;
   private int textureId = -1;
+
+  public Texture() {
+    this(SIZE, SIZE);
+  }
 
   public Texture(int width, int height) {
     assert(width > 0);

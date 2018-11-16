@@ -16,8 +16,6 @@
 
 package com.google.ar.core.examples.java.helloar;
 
-import android.graphics.Bitmap;
-import android.media.Image;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
@@ -42,12 +40,13 @@ import com.google.ar.core.examples.java.common.helpers.DisplayRotationHelper;
 import com.google.ar.core.examples.java.common.helpers.FullScreenHelper;
 import com.google.ar.core.examples.java.common.helpers.SnackbarHelper;
 import com.google.ar.core.examples.java.common.helpers.TapHelper;
+import com.google.ar.core.examples.java.common.rendering.AREnvironment;
 import com.google.ar.core.examples.java.common.rendering.BackgroundRenderer;
-import com.google.ar.core.examples.java.common.rendering.QuadRenderer;
 import com.google.ar.core.examples.java.common.rendering.ObjectRenderer;
 import com.google.ar.core.examples.java.common.rendering.ObjectRenderer.BlendMode;
 import com.google.ar.core.examples.java.common.rendering.PlaneRenderer;
 import com.google.ar.core.examples.java.common.rendering.PointCloudRenderer;
+import com.google.ar.core.examples.java.common.rendering.QuadRenderer;
 import com.google.ar.core.exceptions.CameraNotAvailableException;
 import com.google.ar.core.exceptions.UnavailableApkTooOldException;
 import com.google.ar.core.exceptions.UnavailableArcoreNotInstalledException;
@@ -55,7 +54,6 @@ import com.google.ar.core.exceptions.UnavailableDeviceNotCompatibleException;
 import com.google.ar.core.exceptions.UnavailableSdkTooOldException;
 import com.google.ar.core.exceptions.UnavailableUserDeclinedInstallationException;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -73,6 +71,9 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
 
   private boolean installRequested;
 
+  private AREnvironment env;
+  private QuadRenderer[] quadRenderers;
+
   private Session session;
   private final SnackbarHelper messageSnackbarHelper = new SnackbarHelper();
   private DisplayRotationHelper displayRotationHelper;
@@ -89,6 +90,15 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
 
   // Anchors created from taps used for object placing.
   private final ArrayList<Anchor> anchors = new ArrayList<>();
+
+  private static final float[][] ENV_QUAD_COORDS = new float[][] {
+    new float[] { -0.4f, -0.6f, 0.0f, -0.4f, -0.4f, 0.0f, -0.1f, -0.6f, 0.0f, -0.1f, -0.4f, 0.0f },
+    new float[] { -1.0f, -0.6f, 0.0f, -1.0f, -0.4f, 0.0f, -0.7f, -0.6f, 0.0f, -0.7f, -0.4f, 0.0f },
+    new float[] { -0.7f, -0.4f, 0.0f, -0.7f, -0.2f, 0.0f, -0.4f, -0.4f, 0.0f, -0.4f, -0.2f, 0.0f },
+    new float[] { -0.7f, -0.8f, 0.0f, -0.7f, -0.6f, 0.0f, -0.4f, -0.8f, 0.0f, -0.4f, -0.6f, 0.0f },
+    new float[] { -0.1f, -0.6f, 0.0f, -0.1f, -0.4f, 0.0f, 0.2f, -0.6f, 0.0f, 0.2f, -0.4f, 0.0f },
+    new float[] { -0.7f, -0.6f, 0.0f, -0.7f, -0.4f, 0.0f, -0.4f, -0.6f, 0.0f, -0.4f, -0.4f, 0.0f },
+  };
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -109,6 +119,12 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
     surfaceView.setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY);
 
     installRequested = false;
+
+    env = new AREnvironment();
+    quadRenderers = new QuadRenderer[6];
+    for (int i = 0; i < 6; i++) {
+      quadRenderers[i] = new QuadRenderer(ENV_QUAD_COORDS[i], env.getTexture(i));
+    }
   }
 
   @Override
@@ -231,6 +247,9 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
       virtualObjectShadow.setBlendMode(BlendMode.Shadow);
       virtualObjectShadow.setMaterialProperties(1.0f, 0.0f, 0.0f, 1.0f);
 
+      for (int i = 0; i < 6; i++) {
+        quadRenderers[i].createOnGlThread(this);
+      }
     } catch (IOException e) {
       Log.e(TAG, "Failed to read an asset file", e);
     }
@@ -263,15 +282,6 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
       Frame frame = session.update();
       Camera camera = frame.getCamera();
 
-      Bitmap bm = Bitmap.createBitmap(128, 128, Bitmap.Config.ARGB_8888);
-      Image img = frame.acquireCameraImage();
-      android.media.Image.Plane[] planes = img.getPlanes();
-      for (int i = 0; i < planes.length; i++) {
-        android.media.Image.Plane plane = planes[i];
-        ByteBuffer bb = plane.getBuffer();
-        bb.asCharBuffer();
-      }
-
       // Handle taps. Handling only one tap per frame, as taps are usually low frequency
       // compared to frame rate.
 
@@ -301,8 +311,8 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
         }
       }
 
-      // Draw background.
-      backgroundRenderer.draw(frame);
+      // Draw background. TODO: Redraw background
+      // backgroundRenderer.draw(frame);
 
       // If not tracking, don't draw 3d objects.
       if (camera.getTrackingState() == TrackingState.PAUSED) {
@@ -322,6 +332,12 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
       // The last one is the average pixel intensity in gamma space.
       final float[] colorCorrectionRgba = new float[4];
       frame.getLightEstimate().getColorCorrection(colorCorrectionRgba, 0);
+
+      // TODO: HERE!!!!!
+      env.update(frame.acquireCameraImage(), projmtx, viewmtx);
+      for (int i = 0; i < 6; i++) {
+        quadRenderers[i].draw();
+      }
 
       // Visualize tracked points.
       PointCloud pointCloud = frame.acquirePointCloud();

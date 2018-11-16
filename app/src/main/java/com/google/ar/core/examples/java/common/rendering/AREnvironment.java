@@ -2,6 +2,8 @@ package com.google.ar.core.examples.java.common.rendering;
 
 import android.graphics.Bitmap;
 import android.media.Image;
+import android.opengl.GLES20;
+import android.opengl.GLUtils;
 
 import java.nio.CharBuffer;
 
@@ -15,16 +17,26 @@ public class AREnvironment {
   private static final int HALF_SIZE = SIZE / 2;
   private static final int NUM_FACES = 6;
 
-  // Texture[] textures;
+  // Right: 0
+  // Left: 1
+  // Up: 2
+  // Bottom: 3
+  // Back: 4
+  // Front: 5
+  Texture[] textures;
   Bitmap[] textureBitmaps;
 
   public AREnvironment() {
-    // textures = new Texture[NUM_FACES];
+    textures = new Texture[NUM_FACES];
     textureBitmaps = new Bitmap[NUM_FACES];
     for (int i = 0; i < NUM_FACES; i++) {
-      // textures[i] = new Texture(SIZE, SIZE);
+      textures[i] = new Texture(SIZE, SIZE);
       textureBitmaps[i] = Bitmap.createBitmap(SIZE, SIZE, Bitmap.Config.ARGB_8888);
     }
+  }
+
+  public Texture getTexture(int i) {
+    return this.textures[i];
   }
 
   public void update(Image cameraImage, float[] projMat, float[] viewMat) {
@@ -59,29 +71,30 @@ public class AREnvironment {
         float imgx = (float) (i - halfWidth) / width;
         float imgy = (float) (j - halfHeight) / height;
 
-        // Get
+        // First we get the bitmap to draw
         Vec3 pxDir = new Vec3(invProjView.times(new Vec4(imgx, imgy, 1, 1))).normalize();
         int bitmapIndex = this.getDirectionFace(pxDir);
+
+        // Then we get the position to draw on that bitmap
         Vec2 faceXY = this.getXYOnFace(pxDir, bitmapIndex);
         int bitmapX = (int) (faceXY.x * HALF_SIZE + HALF_SIZE);
         int bitmapY = (int) (faceXY.y * HALF_SIZE + HALF_SIZE);
 
-        // Update
+        // Update the bitmap
         textureBitmaps[bitmapIndex].setPixel(bitmapX, bitmapY, rgba);
       }
     }
+
+    this.drawToTexture();
   }
 
-  public int sign(float f) {
-    return f > 0 ? 1 : -1;
+  public void drawToTexture() {
+    for (int i = 0; i < NUM_FACES; i++) {
+      GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textures[i].getTextureId());
+      GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, textureBitmaps[i], 0);
+    }
   }
 
-  // Right: 0
-  // Left: 1
-  // Up: 2
-  // Bottom: 3
-  // Back: 4
-  // Front: 5
   public int getDirectionFace(Vec3 dir) {
     float x = Math.abs(dir.x), y = Math.abs(dir.y), z = Math.abs(dir.z);
     if (x > y) {
@@ -121,17 +134,6 @@ public class AREnvironment {
         throw new Error("Invalid face " + face);
     }
   }
-
-//  public Vec3 cubify(Vec3 u) {
-//    float xx2 = u.x * u.x * 2;
-//    float yy2 = u.y * u.y * 2;
-//    float diff = xx2 - yy2;
-//    Vec2 v = new Vec2(diff, -diff);
-//    float ii = v.y - 3.0f;
-//    ii *= ii;
-//    float isqrt = -(float) Math.sqrt(ii - 12.0 * xx2) + 3.0f;
-//    v =
-//  }
 
   public int yuvToARGB(char y, char u, char v) {
     float fu = (float) u, fv = (float) v;
