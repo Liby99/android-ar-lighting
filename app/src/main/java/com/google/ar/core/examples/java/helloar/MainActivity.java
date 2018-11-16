@@ -16,6 +16,7 @@
 
 package com.google.ar.core.examples.java.helloar;
 
+import android.media.Image;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
@@ -99,6 +100,8 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
     new float[] { -0.1f, -0.6f, 0.0f, -0.1f, -0.4f, 0.0f, 0.2f, -0.6f, 0.0f, 0.2f, -0.4f, 0.0f },
     new float[] { -0.7f, -0.6f, 0.0f, -0.7f, -0.4f, 0.0f, -0.4f, -0.6f, 0.0f, -0.4f, -0.4f, 0.0f },
   };
+
+  private boolean drawn = false;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -312,7 +315,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
       }
 
       // Draw background. TODO: Redraw background
-      // backgroundRenderer.draw(frame);
+      backgroundRenderer.draw(frame);
 
       // If not tracking, don't draw 3d objects.
       if (camera.getTrackingState() == TrackingState.PAUSED) {
@@ -332,12 +335,6 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
       // The last one is the average pixel intensity in gamma space.
       final float[] colorCorrectionRgba = new float[4];
       frame.getLightEstimate().getColorCorrection(colorCorrectionRgba, 0);
-
-      // TODO: HERE!!!!!
-      env.update(frame.acquireCameraImage(), projmtx, viewmtx);
-      for (int i = 0; i < 6; i++) {
-        quadRenderers[i].draw();
-      }
 
       // Visualize tracked points.
       PointCloud pointCloud = frame.acquirePointCloud();
@@ -378,6 +375,21 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
         virtualObjectShadow.updateModelMatrix(anchorMatrix, scaleFactor);
         virtualObject.draw(viewmtx, projmtx, colorCorrectionRgba);
         virtualObjectShadow.draw(viewmtx, projmtx, colorCorrectionRgba);
+      }
+
+      // TODO: HERE!!!!!
+      if (!drawn) {
+
+        // Acquire image then release
+        Image image = frame.acquireCameraImage();
+        env.update(image, projmtx, viewmtx);
+        image.close();
+
+        // Then draw to texture
+        env.drawToTexture();
+        for (int i = 0; i < 6; i++) {
+          quadRenderers[i].draw();
+        }
       }
 
     } catch (Throwable t) {

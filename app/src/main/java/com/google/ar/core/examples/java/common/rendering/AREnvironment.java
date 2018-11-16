@@ -4,7 +4,9 @@ import android.graphics.Bitmap;
 import android.media.Image;
 import android.opengl.GLES20;
 import android.opengl.GLUtils;
+import android.util.Log;
 
+import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 
 import glm.mat4x4.Mat4;
@@ -41,6 +43,8 @@ public class AREnvironment {
 
   public void update(Image cameraImage, float[] projMat, float[] viewMat) {
 
+    Log.d("Liby", "Updating AR Env");
+
     // Initiate image related values
     int width = cameraImage.getWidth();
     int height = cameraImage.getHeight();
@@ -48,9 +52,9 @@ public class AREnvironment {
     int halfHeight = height / 2;
 
     Image.Plane[] planes = cameraImage.getPlanes();
-    CharBuffer yPlane = planes[0].getBuffer().asCharBuffer();
-    CharBuffer uPlane = planes[1].getBuffer().asCharBuffer();
-    CharBuffer vPlane = planes[2].getBuffer().asCharBuffer();
+    ByteBuffer yPlane = planes[0].getBuffer();
+    ByteBuffer uPlane = planes[1].getBuffer();
+    ByteBuffer vPlane = planes[2].getBuffer();
 
     // Initiate matrices
     Mat4 view = new Mat4(viewMat);
@@ -65,7 +69,7 @@ public class AREnvironment {
 
         // Get the rgba values
         int pxId = j * height + i;
-        int rgba = yuvToARGB(yPlane.get(pxId), uPlane.get(pxId), vPlane.get(pxId));
+        int argb = yuvToARGB(yPlane.get(pxId), uPlane.get(pxId), vPlane.get(pxId));
 
         // X and Y value in
         float imgx = (float) (i - halfWidth) / width;
@@ -80,12 +84,12 @@ public class AREnvironment {
         int bitmapX = (int) (faceXY.x * HALF_SIZE + HALF_SIZE);
         int bitmapY = (int) (faceXY.y * HALF_SIZE + HALF_SIZE);
 
+        Log.d("Liby", "Face " + bitmapIndex + ", x = " + bitmapX + ", y = " + bitmapY);
+
         // Update the bitmap
-        textureBitmaps[bitmapIndex].setPixel(bitmapX, bitmapY, rgba);
+        textureBitmaps[bitmapIndex].setPixel(bitmapX, bitmapY, argb);
       }
     }
-
-    this.drawToTexture();
   }
 
   public void drawToTexture() {
@@ -135,11 +139,11 @@ public class AREnvironment {
     }
   }
 
-  public int yuvToARGB(char y, char u, char v) {
+  public int yuvToARGB(byte y, byte u, byte v) {
     float fu = (float) u, fv = (float) v;
-    char r = (char) (y + 1.14f * fv);
-    char g = (char) (y - 0.395f * fu - 0.581f * fv);
-    char b = (char) (y + 2.033f * fu);
-    return 0xff000000 | r >> 8 | g >> 16 | b >> 24;
+    int r = (int) (y + 1.14f * fv);
+    int g = (int) (y - 0.395f * fu - 0.581f * fv);
+    int b = (int) (y + 2.033f * fu);
+    return 0xff000000 | r << 16 | g << 8 | b;
   }
 }

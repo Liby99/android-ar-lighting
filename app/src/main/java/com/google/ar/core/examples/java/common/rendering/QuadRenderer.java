@@ -4,6 +4,7 @@ import android.content.Context;
 import android.opengl.GLES11Ext;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
+import android.util.Log;
 
 import com.google.ar.core.Frame;
 import com.google.ar.core.Session;
@@ -123,7 +124,8 @@ public class QuadRenderer {
     GLES20.glDisable(GLES20.GL_DEPTH_TEST);
     GLES20.glDepthMask(false);
 
-    GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, this.texture.getTextureId());
+    Log.d("Render","TextureId: " + this.getTextureId());
+    GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, this.getTextureId());
 
     GLES20.glUseProgram(quadProgram);
 
