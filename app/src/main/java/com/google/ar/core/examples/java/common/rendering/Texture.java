@@ -57,7 +57,5 @@ public class Texture {
     GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, bitmap, 0);
 //    GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D, 0, GLES20.GL_RGBA, this.width, this.height, 0, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, pixels);
     GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0);
-
-    bitmap.recycle();
   }
 }

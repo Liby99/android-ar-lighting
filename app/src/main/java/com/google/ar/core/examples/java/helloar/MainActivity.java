@@ -320,11 +320,6 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
       // Draw background. TODO: Redraw background
       backgroundRenderer.draw(frame);
 
-      // If not tracking, don't draw 3d objects.
-      if (camera.getTrackingState() == TrackingState.PAUSED) {
-        return;
-      }
-
       // Get projection matrix.
       float[] projmtx = new float[16];
       camera.getProjectionMatrix(projmtx, 0, 0.1f, 100.0f);
@@ -332,6 +327,31 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
       // Get camera matrix and draw.
       float[] viewmtx = new float[16];
       camera.getViewMatrix(viewmtx, 0);
+
+      // TODO: HERE!!!!!
+      if (drawCount > GAP) {
+        drawCount = 0;
+
+        // Acquire image then release
+        Image image = frame.acquireCameraImage();
+        env.update(image, projmtx, viewmtx);
+        image.close();
+
+        env.drawToTexture();
+      }
+
+      drawCount++;
+      for (int i = 0; i < 6; i++) {
+        quadRenderers[i].draw();
+      }
+
+
+
+
+      // If not tracking, don't draw 3d objects.
+      if (camera.getTrackingState() == TrackingState.PAUSED) {
+        return;
+      }
 
       // Compute lighting from average intensity of the image.
       // The first three components are color scaling factors.
@@ -378,23 +398,6 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
         virtualObjectShadow.updateModelMatrix(anchorMatrix, scaleFactor);
         virtualObject.draw(viewmtx, projmtx, colorCorrectionRgba);
         virtualObjectShadow.draw(viewmtx, projmtx, colorCorrectionRgba);
-      }
-
-      // TODO: HERE!!!!!
-      if (drawCount > GAP) {
-        drawCount = 0;
-
-        // Acquire image then release
-        Image image = frame.acquireCameraImage();
-        env.update(image, projmtx, viewmtx);
-//        image.close();
-
-        env.drawToTexture();
-      }
-
-      drawCount++;
-      for (int i = 0; i < 6; i++) {
-        quadRenderers[i].draw();
       }
 
     } catch (Throwable t) {

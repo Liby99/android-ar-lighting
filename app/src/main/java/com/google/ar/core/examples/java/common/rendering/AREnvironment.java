@@ -15,10 +15,10 @@ import glm.vec3.Vec3;
 import glm.vec4.Vec4;
 
 public class AREnvironment {
-  private static final int SIZE = 32;
+  private static final int SIZE = 64;
   private static final int HALF_SIZE = SIZE / 2;
   private static final int NUM_FACES = 6;
-  private static final int SKIP = 20;
+  private static final int SKIP = 15;
 
   // Right: 0
   // Left: 1
@@ -57,8 +57,6 @@ public class AREnvironment {
     ByteBuffer uPlane = planes[1].getBuffer();
     ByteBuffer vPlane = planes[2].getBuffer();
 
-    cameraImage.close();
-
     // Initiate matrices
     Mat4 view = new Mat4(viewMat);
     view.v30(0);
@@ -89,8 +87,8 @@ public class AREnvironment {
         int argb = yuvToARGB(y, u, v);
 
         // X and Y value in
-        float imgx = (float) (i - halfHeight) / halfHeight;
-        float imgy = (float) (j - halfWidth) / halfWidth;
+        float imgx = (float) (j + halfWidth) / halfWidth;
+        float imgy = (float) (-i + halfHeight) / halfHeight;
 
         // First we get the bitmap to draw
         Vec3 pxDir = new Vec3(invProjView.times(new Vec4(imgx, imgy, 1, 1))).normalize();
@@ -99,7 +97,7 @@ public class AREnvironment {
         // Then we get the position to draw on that bitmap
         Vec2 faceXY = this.getXYOnFace(pxDir, bitmapIndex);
         int bitmapX = (int) (faceXY.x * HALF_SIZE + HALF_SIZE);
-        int bitmapY = (int) (faceXY.y * HALF_SIZE + HALF_SIZE);
+        int bitmapY = (int) (-faceXY.y * HALF_SIZE + HALF_SIZE);
 
         Log.d("Liby", "Face " + bitmapIndex + ", x = " + bitmapX + ", y = " + bitmapY + ", color = " + argb);
 
@@ -141,17 +139,17 @@ public class AREnvironment {
     switch (face) {
       case 0: case 1:
         scale = Math.abs(1.0f / dir.x);
-        y = dir.y * scale;
-        z = dir.z * scale;
+        y = sign(dir.x) * dir.y * scale;
+        z = sign(dir.x) * dir.z * scale;
         return new Vec2(z, y);
       case 2: case 3:
         scale = Math.abs(1.0f / dir.y);
-        x = -dir.x * scale;
+        x = -sign(dir.y) * dir.x * scale;
         z = -sign(dir.y) * dir.z * scale;
         return new Vec2(x, z);
       case 4: case 5:
         scale = Math.abs(1.0f / dir.z);
-        x = -dir.x * scale;
+        x = -sign(dir.z) * dir.x * scale;
         y = sign(dir.z) * dir.y * scale;
         return new Vec2(x, y);
       default:
